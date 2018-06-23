@@ -404,48 +404,6 @@
                 morebtn.classList.remove("field-hidden");
                 Id = $(this).data("id");
                 updatehistory();
-                //var data = { "UserId": Id, "CountProp": CountProp };
-                //$.ajax({
-                //    type: 'POST',
-                //    url: '../api/users/history',
-                //    contentType: 'application/json; charset=utf-8',
-                //    data: JSON.stringify(data)
-                //}).success(function(item) {
-                //    if (item == null) {
-                //        morebtn.innerHTML = "Отсутствуют данные по изменениям!";
-                //    } else {
-                //        morebtn.innerHTML = "загрузить ещё";
-                //        var conteiner = document.getElementById("data-container");
-                //        $('#data-container').empty();
-                //        var div_name = document.createElement("div");
-                //        div_name.className = "data-item";
-                //        div_name.innerHTML = item.Name;
-                //        conteiner.appendChild(div_name);
-
-                //        var div = document.createElement("div");
-                //        div.className = "data-item";
-                //        div.innerHTML = "Дата изменения: " + item.DateActionUsersString;
-
-                //        $.each(item.usersHistory,
-                //            function(index, prop) {
-                //                var div_prop = document.createElement("div");
-                //                div_prop.className = "data-item2";
-                //                div_prop.innerHTML = "Свойство: " +
-                //                    prop.Name +
-                //                    ";" +
-                //                    " Старое значение:" +
-                //                    prop.OldValue +
-                //                    ";" +
-                //                    " Новое значение:" +
-                //                    prop.NewValue;
-                //                div.appendChild(div_prop);
-                //            });
-
-                //        conteiner.appendChild(div);
-                //        CountProp++; //следующее измененное свойство
-                //    }
-
-                //});
             });
         // нажимаем загрузить ещё
         $("body").on("click",
