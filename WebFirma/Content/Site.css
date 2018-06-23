@@ -1,0 +1,43 @@
+﻿body {
+    padding-top: 50px;
+    padding-bottom: 20px;
+}
+
+/* Set padding to keep content from hitting the edges */
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Set width on the form input elements since they're 100% wide by default */
+input,
+select,
+textarea {
+    max-width: 280px;
+}
+.field-hidden {
+    display: none;
+}
+#data-container {
+  margin: 10px;
+}
+
+#data-container .data-item {
+  background-color: #444444;
+  border-radius: 5px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  padding: 5px;
+  margin: 5px;
+  color: #fff;
+}
+
+#button-more{
+  cursor: pointer;
+  margin: 0 auto;
+  color: #c92a2a;
+  width: auto;
+  height: auto;
+  line-height: 50px;
+}
+ 

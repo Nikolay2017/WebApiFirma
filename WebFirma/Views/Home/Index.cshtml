@@ -1,0 +1,534 @@
+﻿@{
+    ViewData["Title"] = "Овощная фабрика";
+}
+<h2 id="edit_field">Добавить сотрудника</h2>
+<div class="row">
+    <div class="col-md-8">
+        <div id="errors" class="alert alert-danger" style="display:none;"></div>
+        <form name="userForm">
+            <input type="hidden" class="id" name="id" value="0" />
+            <input type="hidden" name="date" />
+            <input type="hidden" name="fl" />
+            <div class="form-group">
+                <label>Имя:</label>
+                <input class="form-control" name="name" />
+            </div>
+            <div class="form-group">
+                <label>Возраст:</label>
+                <input class="form-control" name="age" />
+            </div>
+            <div class="form-group">
+                <label>Подразделение:</label>
+                <select id="otdels" name="otdels" class="form-control"></select>
+                @*@Html.DropDownList("otdels", ViewBag.Otdels as SelectList, new { @class = "form-control" })*@
+            </div>
+            <div class="form-group">
+                <label>Испытательный срок(кол.месяцев):</label>
+                <select id="ispyts" name="ispyts" class="form-control"></select>
+                @*@Html.DropDownList("ispyts", ViewBag.Ispyts as SelectList, new { @class = "form-control" })*@
+            </div>
+            <div class="form-group">
+                <label>Уровень квалификации:</label>
+                <select id="kvals" name="kvals" class="form-control"></select>
+                @*@Html.DropDownList("kvals", ViewBag.Kvals as SelectList, new { @class = "form-control" })*@
+            </div>
+            <div class="panel-body">
+                <button type="submit" class="btn btn-sm btn-primary">Сохранить</button>
+                <a id="reset" class="btn btn-sm btn-primary">Сбросить</a>
+            </div>
+        </form>
+    </div>
+</div>
+<h2>Список сотрудников</h2>
+<div style="float:left;">Поиск по:</div>
+<form name="searchForm">
+    <div style="margin-bottom:20px;margin-left:10px;float:left;">
+        <select name="filtr" class="form-control">
+            <option value="ФИО">ФИО</option>
+            <option value="подразделение">подразделению</option>
+            <option value="квалификация">квалификации</option>
+        </select>
+    </div>
+    <div style="float:left;margin-left:10px;margin-right:10px;">
+        <input class="form-control" name="search" />
+    </div>
+    <div>
+        <a id="search" class="btn btn-sm btn-primary">Показать</a>
+    </div>
+</form>
+
+<table class="table table-condensed table-striped table-bordered">
+    <thead><tr><th>Id</th><th>Имя</th><th>возраст</th><th>Испыт.срок</th><th>Дата приема на работу</th><th>Подразделение</th><th>Квалификация</th><th></th></tr></thead>
+    <tbody></tbody>
+</table>
+<hr>
+<div id="data-container"></div>
+<div id="button-more" class="button-more field-hidden">
+</div>
+
+
+@section Scripts {
+    <script>
+        // Получение всех сотрудников
+        function GetUsers() {
+            $.ajax({
+                url: '../api/users',
+                type: 'GET',
+                dataType: 'json',
+                success: function(users) {
+                    var rows = "";
+                    $.each(users,
+                        function(index, user) {
+                            // добавляем полученные элементы в таблицу
+                            rows += row(user);
+                        });
+                    $("table tbody").append(rows);
+                }
+            });
+            //подгрузка отделов
+            $.ajax({
+                url: '../api/users/otdels/',
+                type: 'GET',
+                dataType: 'json',
+                success: function(otdels) {
+                    var select = document.getElementById("otdels");
+                    $.each(otdels,
+                        function(index, otdel) {
+                            var option = document.createElement("option");
+                            option.value = otdel.Id;
+                            option.text = otdel.Name;
+                            select.add(option, null);
+                        });
+                }
+            });
+            //подгрузка исп.сроков
+            $.ajax({
+                url: '../api/users/ispyts/',
+                type: 'GET',
+                dataType: 'json',
+                success: function(otdels) {
+                    var select = document.getElementById("ispyts");
+                    $.each(otdels,
+                        function(index, otdel) {
+                            var option = document.createElement("option");
+                            option.value = otdel.Id;
+                            option.text = otdel.Name;
+                            select.add(option, null);
+                        });
+                }
+            });
+            //подгрузка квалификаций
+            $.ajax({
+                url: '../api/users/kvals/',
+                type: 'GET',
+                dataType: 'json',
+                success: function(otdels) {
+                    var select = document.getElementById("kvals");
+                    $.each(otdels,
+                        function(index, otdel) {
+                            var option = document.createElement("option");
+                            option.value = otdel.Id;
+                            option.text = otdel.Name;
+                            select.add(option, null);
+                        });
+                }
+            });
+        }
+
+        var field_ispyts = document.querySelector('[name="ispyts"]');
+        var field_otdels = document.querySelector('[name="otdels"]');
+
+        // Получение одного сотрудника
+        function GetUser(id) {
+
+            $.ajax({
+                url: '../api/users/' + id,
+                type: 'GET',
+                contentType: "application/json",
+                success: function(user) {
+                    var form = document.forms["userForm"];
+                    form.elements["id"].value = user.Id;
+                    form.elements["name"].value = user.Name;
+                    form.elements["age"].value = user.Age;
+
+                    form.elements["ispyts"].value = user.IspytId;
+                    field_ispyts.classList.add("field-hidden");
+
+                    form.elements["kvals"].value = user.KvalId;
+                    form.elements["otdels"].value = user.OtdelId;
+                    form.elements["fl"].value = user.fl;
+
+                    if (!user.fl) field_otdels.classList.add("field-hidden");
+
+                    form.elements["date"].value = user.Date_Start;
+                }
+            });
+        }
+
+        // Добавление сотрудника
+        function CreateUser(name, age, ispyt, kval, otdel) {
+            $.ajax({
+                url: "../api/users",
+                contentType: "application/json",
+                method: "POST",
+                data: JSON.stringify({
+                    Name: name,
+                    Age: age,
+                    IspytId: ispyt,
+                    KvalId: kval,
+                    OtdelId: otdel
+                }),
+                success: function(user) {
+                    reset();
+                    $("table tbody").append(row(user));
+                },
+                error: function(jxqr, error, status) {
+                    // парсинг json-объекта
+                    console.log(jxqr);
+                    if (jxqr.responseText === "") {
+                        $('#errors').append("<h3>" + jxqr.statusText + "</h3>");
+                    } else {
+                        var response = JSON.parse(jxqr.responseText);
+                        // добавляем общие ошибки модели
+                        if (response['']) {
+
+                            $.each(response[''],
+                                function(index, item) {
+                                    $('#errors').append("<p>" + item + "</p>");
+                                });
+                        }
+                        // добавляем ошибки свойства NonIspyt
+                        if (response['ModelState']['NonIspyt']) {
+
+                            $.each(response['ModelState']['NonIspyt'],
+                                function(index, item) {
+                                    $('#errors').append("<p>" + item + "</p>");
+                                });
+                        }
+                        // добавляем ошибки свойства NonKval
+                        if (response['ModelState']['NonKval']) {
+                            $.each(response['ModelState']['NonKval'],
+                                function(index, item) {
+                                    $('#errors').append("<p>" + item + "</p>");
+                                });
+                        }
+                        // добавляем ошибки свойства NonOtdel
+                        if (response['ModelState']['NonOtdel']) {
+                            $.each(response['ModelState']['NonOtdel'],
+                                function(index, item) {
+                                    $('#errors').append("<p>" + item + "</p>");
+                                });
+                        }
+                    }
+
+                    $('#errors').show();
+                }
+
+            });
+        }
+
+        // Изменение сотрудника
+        function EditUser(Id, Name, Age, Ispyt, Kval, Otdel, Date, Fl) {
+            $.ajax({
+                url: "../api/users/" + Id,
+                contentType: "application/json",
+                method: "PUT",
+                data: JSON.stringify({
+                    id: Id,
+                    name: Name,
+                    age: Age,
+                    ispytId: Ispyt,
+                    kvalId: Kval,
+                    otdelId: Otdel,
+                    date_Start: Date,
+                    fl: Fl
+                }),
+                success: function(user) {
+                    reset();
+                    $("tr[data-rowid='" + user.Id + "']").replaceWith(row(user));
+                },
+                error: function(jxqr, error, status) {
+                    // парсинг json-объекта
+                    console.log(jxqr);
+                    if (jxqr.responseText === "") {
+                        $('#errors').append("<h3>" + jxqr.statusText + "</h3>");
+                    } else {
+                        var response = JSON.parse(jxqr.responseText);
+                        // добавляем общие ошибки модели
+                        if (response['']) {
+
+                            $.each(response[''],
+                                function(index, item) {
+                                    $('#errors').append("<p>" + item + "</p>");
+                                });
+                        }
+                        // добавляем ошибки свойства NonIspyt
+                        if (response['ModelState']['NonIspyt']) {
+
+                            $.each(response['ModelState']['NonIspyt'],
+                                function(index, item) {
+                                    $('#errors').append("<p>" + item + "</p>");
+                                });
+                        }
+                        // добавляем ошибки свойства NonKval
+                        if (response['ModelState']['NonKval']) {
+                            $.each(response['ModelState']['NonKval'],
+                                function(index, item) {
+                                    $('#errors').append("<p>" + item + "</p>");
+                                });
+                        }
+                        // добавляем ошибки свойства NonOtdel
+                        if (response['ModelState']['NonOtdel']) {
+                            $.each(response['ModelState']['NonOtdel'],
+                                function(index, item) {
+                                    $('#errors').append("<p>" + item + "</p>");
+                                });
+                        }
+                    }
+
+                    $('#errors').show();
+                }
+            });
+        }
+
+        // сброс формы
+        function reset() {
+            var form = document.forms["userForm"];
+            form.reset();
+            form.elements["id"].value = 0;
+            field_ispyts.classList.remove("field-hidden");
+            field_otdels.classList.remove("field-hidden");
+            document.getElementById("edit_field").textContent = "Добавить сотрудника";
+            $('#errors').empty();
+            $('#errors').css("display", "none");
+        }
+
+        // Удаление сотрудника
+        function DeleteUser(id) {
+            $.ajax({
+                url: "../api/users/" + id,
+                contentType: "application/json",
+                method: "DELETE",
+                success: function(user) {
+                    $("tr[data-rowid='" + user.Id + "']").remove();
+                }
+            });
+        }
+
+        // создание строки для таблицы
+        var row = function(user) {
+            return "<tr data-rowid='" +
+                user.Id +
+                "'><td>" +
+                user.Id +
+                "</td>" +
+                "<td>" +
+                user.Name +
+                "</td> <td>" +
+                user.Age +
+                "</td>" +
+                "<td>" +
+                user.Ispyt.Name +
+                "</td> <td>" +
+                user.DateStartString +
+                "</td> <td>" +
+                user.Otdel.Name +
+                "</td> <td>" +
+                user.Kval.Name +
+                "</td>" +
+                "<td><a class='editLink' data-id='" +
+                user.Id +
+                "'>Изменить</a> | " +
+                "<a class='removeLink' data-id='" +
+                user.Id +
+                "'>Удалить</a> | " +
+                "<a class='historyLink' data-id='" +
+                user.Id +
+                "'>История сотрудника</a></td></tr>";
+        }
+        // сброс значений формы
+        $("#reset").click(function(e) {
+            e.preventDefault();
+            reset();
+        });
+
+
+        // отправка формы
+        $("form").submit(function(e) {
+            e.preventDefault();
+            var id = this.elements["id"].value;
+            var name = this.elements["name"].value;
+            var age = this.elements["age"].value;
+            var ispyt = this.elements["ispyts"].value;
+            var kval = this.elements["kvals"].value;
+            var otdel = this.elements["otdels"].value;
+            var date = this.elements["date"].value;
+            var fl = this.elements["fl"].value;
+
+            $('#errors').empty();
+            $('#errors').css("display", "none");
+            if (id == 0)
+                CreateUser(name, age, ispyt, kval, otdel);
+            else
+                EditUser(id, name, age, ispyt, kval, otdel, date, fl);
+        });
+
+        // нажимаем на ссылку Изменить
+        $("body").on("click",
+            ".editLink",
+            function() {
+                var id = $(this).data("id");
+                document.getElementById("edit_field").textContent = "Изменить данные сотрудника";
+                $('#errors').empty();
+                $('#errors').css("display", "none");
+                field_ispyts.classList.remove("field-hidden");
+                field_otdels.classList.remove("field-hidden");
+                GetUser(id);
+            });
+        // нажимаем на ссылку Удалить
+        $("body").on("click",
+            ".removeLink",
+            function() {
+                var id = $(this).data("id");
+                DeleteUser(id);
+            });
+        var CountProp = 0;
+        var Id = 0;
+        var morebtn = document.getElementById("button-more");
+        // нажимаем на ссылку история
+        $("body").on("click",
+            ".historyLink",
+            function () {
+                CountProp = 0;
+                $('#data-container').empty();
+                morebtn.classList.remove("field-hidden");
+                Id = $(this).data("id");
+                updatehistory();
+                //var data = { "UserId": Id, "CountProp": CountProp };
+                //$.ajax({
+                //    type: 'POST',
+                //    url: '../api/users/history',
+                //    contentType: 'application/json; charset=utf-8',
+                //    data: JSON.stringify(data)
+                //}).success(function(item) {
+                //    if (item == null) {
+                //        morebtn.innerHTML = "Отсутствуют данные по изменениям!";
+                //    } else {
+                //        morebtn.innerHTML = "загрузить ещё";
+                //        var conteiner = document.getElementById("data-container");
+                //        $('#data-container').empty();
+                //        var div_name = document.createElement("div");
+                //        div_name.className = "data-item";
+                //        div_name.innerHTML = item.Name;
+                //        conteiner.appendChild(div_name);
+
+                //        var div = document.createElement("div");
+                //        div.className = "data-item";
+                //        div.innerHTML = "Дата изменения: " + item.DateActionUsersString;
+
+                //        $.each(item.usersHistory,
+                //            function(index, prop) {
+                //                var div_prop = document.createElement("div");
+                //                div_prop.className = "data-item2";
+                //                div_prop.innerHTML = "Свойство: " +
+                //                    prop.Name +
+                //                    ";" +
+                //                    " Старое значение:" +
+                //                    prop.OldValue +
+                //                    ";" +
+                //                    " Новое значение:" +
+                //                    prop.NewValue;
+                //                div.appendChild(div_prop);
+                //            });
+
+                //        conteiner.appendChild(div);
+                //        CountProp++; //следующее измененное свойство
+                //    }
+
+                //});
+            });
+        // нажимаем загрузить ещё
+        $("body").on("click",
+            ".button-more",
+            function() {
+                updatehistory();
+            });
+        //загрузить историю изменений
+        function updatehistory() {
+            var data = { "UserId": Id, "CountProp": CountProp };
+            $.ajax({
+                type: 'POST',
+                url: '../api/users/history',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(data)
+            }).success(function (item) {
+                if (item == null) {
+                    morebtn.innerHTML = "изменений больше нет!";
+                } else {
+                    morebtn.innerHTML = "загрузить ещё...";
+                    var conteiner = document.getElementById("data-container");
+                    if (CountProp === 0) {
+                        var div_name = document.createElement("div");
+                        div_name.className = "data-item";
+                        div_name.innerHTML = item.Name;
+                        conteiner.appendChild(div_name);
+                    }
+                    var div = document.createElement("div");
+                    div.className = "data-item";
+                    div.innerHTML = "Дата изменения: " + item.DateActionUsersString;
+
+                    $.each(item.usersHistory,
+                        function (index, prop) {
+                            var div_prop = document.createElement("div");
+                            div_prop.className = "data-item2";
+                            div_prop.innerHTML = "Свойство: " +
+                                prop.Name +
+                                ";" +
+                                " Старое значение:" +
+                                prop.OldValue +
+                                ";" +
+                                " Новое значение:" +
+                                prop.NewValue;
+                            div.appendChild(div_prop);
+                        });
+                    conteiner.appendChild(div);
+                    CountProp++; //следующее измененное свойство
+                }
+            });
+        }
+        // загрузка сотрудников
+        GetUsers();
+
+        var field_filtr = document.querySelector('[name="filtr"]');
+        var field_search = document.querySelector('[name="search"]');
+        // поиск
+        $("#search").click(function(e) {
+            e.preventDefault();
+            $("table tbody").empty();
+            var data = { "filtr": field_filtr.value, "search": field_search.value };
+            $.ajax({
+                type: 'POST',
+                url: '../api/users/filtr',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(data)
+            }).success(function(users) {
+                var rows = "";
+                $.each(users,
+                    function(index, user) {
+                        // добавляем полученные элементы в таблицу
+                        rows += row(user);
+                    });
+                $("table tbody").append(rows);
+            }).fail(function(data) {
+                alert("Фильтр не сработал!");
+            });
+        });
+
+    </script>
+}
+
+
+
+
+
+
